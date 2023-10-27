@@ -1,0 +1,19 @@
+[options]
+package_dir=
+    =src
+
+[options.packages.find]
+where=src
+
+[metadata]
+name = DollyChat
+version = 0.0.0
+author = R2
+author_email = artur.oleksinski99@gmail.com
+long_description = file: README.md
+long_description_content_type = text/markdown
+keywords = example, setuptools
+license = BSD 3-Clause License
+classifiers =
+    License :: OSI Approved :: BSD License
+    Programming Language :: Python :: 3

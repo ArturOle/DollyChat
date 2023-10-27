@@ -1,0 +1,71 @@
+numpy
+transformers
+torch
+langchain
+kivy
+
+
+from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.button import Button
+from kivy.properties import StringProperty
+from kivy.uix.textinput import TextInput
+
+# Model
+class Model:
+    def __init__(self):
+        self.data = ""
+
+    def set_data(self, data):
+        self.data = data
+
+    def get_data(self):
+        return self.data
+
+# View
+class View(BoxLayout):
+    data_text = StringProperty()
+
+    def __init__(self, controller, **kwargs):
+        super(View, self).__init__(**kwargs)
+        self.controller = controller
+        self.orientation = 'vertical'
+
+        self.label = Label(text="Data:")
+        self.data_label = Label(text=self.data_text)
+        self.text_input = TextInput()
+        self.button = Button(text="Update Data")
+
+        self.button.bind(on_press=self.update_data)
+
+        self.add_widget(self.label)
+        self.add_widget(self.data_label)
+        self.add_widget(self.text_input)
+        self.add_widget(self.button)
+
+    def update_data(self, instance):
+        data = self.text_input.text
+        self.controller.update_data(data)
+
+# Controller
+class Controller:
+    def __init__(self, model, view):
+        self.model = model
+        self.view = view
+
+    def update_data(self, data):
+        self.model.set_data(data)
+        self.view.data_text = self.model.get_data()
+        self.view.text_input.text = ""
+
+# Kivy App
+class MVCApp(App):
+    def build(self):
+        model = Model()
+        view = View(Controller(model, None))
+        view.controller.view = view
+        return view
+
+if __name__ == '__main__':
+    MVCApp().run()
