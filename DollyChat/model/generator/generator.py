@@ -7,23 +7,9 @@ from langchain.prompts import PromptTemplate
 from langchain.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain.chains import LLMChain
 
+from prompt_templates import PROMPT_TEMPLATE
+
 PATH = r"E:\Models\dolly-v2-3b"
-
-PROMPT_TEMPLATE = """Below is an instruction that describes a task. Write a response that appropriately completes the request.
-
-Instruction:
-You are a telecommunication technologies specialist and your job is to help providing the most professional answer.
-If you don't know, say that you do not know.
-Take into account previous questions and your answears to these questions. The user qestions are starting with "USER ", your answears are starting with "BOT ".
-
-Previous questions and answears:
-{questions_and_answears}
-
-Question:
-{question}
-
-Response:
-"""
 
 
 class Generator:
@@ -72,17 +58,13 @@ class Generator:
         )
 
         self.logger.info("Preparing templates.")
-        self.prompt_template = PromptTemplate(
-            input_variables=["instruction"],
-            template="{instruction}"
-        )
-        self.prompt_with_context_template = PromptTemplate(
-            input_variables=["instruction", "context"],
-            template="{instruction}\n\nInput:\n{context}"
-        )
 
     def generate_response(self, prompt, context=None, return_token_count=False):
         if prompt and context:
+            self.prompt_with_context_template = PromptTemplate(
+                input_variables=["instruction", "context"],
+                template="{instruction}\n\nInput:\n{context}"
+            )
             response = self.generate_response_with_context(prompt, context)
 
             if return_token_count:
@@ -91,6 +73,11 @@ class Generator:
                 return response
 
         elif prompt:
+            self.prompt_template = PromptTemplate(
+                input_variables=["instruction"],
+                template="{instruction}"
+            )
+
             response = self.generate_response_without_context(prompt, self.prompt_template)
 
             if return_token_count:
@@ -130,16 +117,9 @@ class Generator:
         ).lstrip()
 
     def conversation(self):
-        """
-        Questions and answears: {questions_and_answears}
-
-        Context: {context}
-
-        Question: {question}
-        """
 
         i = 0
-        questions_and_answears = {}
+        history = {}
 
         while True:
             self.prompt_template = PromptTemplate(
@@ -153,15 +133,16 @@ class Generator:
             )
 
             prompt = input("Enter prompt: ")
-
+            self.logger.info(f"Prompt: {prompt}")
             self.logger.info("Generating response...")
             answear = llm_chain.predict(
                 question=prompt,
-                questions_and_answears="".join([f"{i}: {qa}\n" for i, qa in questions_and_answears.items()]),
+                history="".join([f"{i}: {qa}\n" for i, qa in history.items()]),
 
             ).lstrip()
 
-            questions_and_answears[i] = f"{'USER. ' + prompt}\n{'BOT. ' + answear}"
+            self.logger.info(f"Generated response:\n{answear}")
+            history[i] = f"{'USER ' + prompt}\t{'AI ' + answear}"
             print(answear)
             i += 1
 
