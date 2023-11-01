@@ -4,7 +4,7 @@ from view import View
 from controller import Controller
 
 
-class MVCApp(App):
+class DCApp(App):
     def build(self):
         model = Model()
         view = View(Controller(model, None))
@@ -13,4 +13,4 @@ class MVCApp(App):
 
 
 if __name__ == '__main__':
-    MVCApp().run()
+    DCApp().run()

@@ -26,13 +26,13 @@ class Model:
         self.model_path = model_path
         self._generator_model = None
 
-        # if self.model_type == 'local':
-        #     self._generator_model = LocalDolly(self.model_path)
-        # elif self.model_type == 'remote':
-        #     self._generator_model = RemoteDolly(self.model_path)
+        if self.model_type == 'local':
+            self._generator_model = LocalDolly(self.model_path)
+        elif self.model_type == 'remote':
+            self._generator_model = RemoteDolly(self.model_path)
 
-    async def generate_response(self, prompt: str):
-        return await self._generator_model.generate_response(prompt)
+    def generate_response(self, prompt: str):
+        return self._generator_model.generate_response(prompt)
 
     def set_data(self, data):
         self.data = data

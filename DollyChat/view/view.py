@@ -31,6 +31,6 @@ class View(BoxLayout):
 
     def update_data(self, instance):
         data = self.text_input.text
-        asyncio.run(self.controller.generate_response(data))
+        self.controller.generate_response(data)
         response = self.controller.response
-        self.data_text = response
+        self.data_label.text = response

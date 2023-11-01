@@ -16,18 +16,17 @@ class Controller:
         self.view.data_text = self.model.get_data()
         self.view.text_input.text = ""
 
-    async def generate_response(self, data):
-        waiting_string = "Generating response"
+    def generate_response(self, data):
         self.tmp_data_text = "Generating response..."
-        self.response = await self.fake_task()
-        self.logger.info(f"Response generated in Controller:\n {self.tmp_data_text}")
+        self.response = self.model.generate_response(data)
+        self.logger.info(f"Response generated in Controller:\n {self.response}")
         self.view.data_text = self.tmp_data_text
         self.view.text_input.text = ""
-
 
     async def fake_task(self):
         self.logger.info("Fake task started")
         asyncio.sleep(5)
+        self.response = "Fake response"
         self.logger.info("Fake task ended")
         return "Fake task ended"
 
