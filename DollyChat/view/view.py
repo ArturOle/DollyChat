@@ -1,5 +1,3 @@
-import asyncio
-
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
@@ -17,7 +15,7 @@ class View(BoxLayout):
         self.build()
 
     def build(self):
-        self.label = Label(text="Data:")
+        self.label = Label(text="Response:")
         self.data_label = Label(text=self.data_text)
         self.text_input = TextInput()
         self.button = Button(text="Generate Response")
@@ -32,5 +30,3 @@ class View(BoxLayout):
     def update_data(self, instance):
         data = self.text_input.text
         self.controller.generate_response(data)
-        response = self.controller.response
-        self.data_label.text = response

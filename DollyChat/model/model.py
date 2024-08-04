@@ -1,5 +1,8 @@
 import torch
 import logging
+import random
+import time
+import threading
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from .instruct_pipeline import InstructionTextGenerationPipeline
@@ -12,7 +15,9 @@ PATH = r"E:\Models\dolly-v2-3b"
 
 
 class Model:
-    def __init__(self, model_type: str = 'local', model_path=PATH):
+    _generator_model = None
+
+    def __init__(self, model_type: str = 'local', model_path: str = PATH):
         logging.basicConfig(
             filename='model.log',
             filemode='a+',
@@ -20,16 +25,36 @@ class Model:
             datefmt='%d/%m/%Y %H:%M:%S',
             level=logging.INFO
         )
+        self.models_available = {
+            'local': LocalDolly,
+            'fake': FakeDolly,
+            'remotellama': RemoteLLaMA
+        }
         self.logger = logging.getLogger(__name__)
         self.data = ''
         self.model_type = model_type.lower()
         self.model_path = model_path
-        self._generator_model = None
+        self.model_loaded = False
 
-        if self.model_type == 'local':
-            self._generator_model = LocalDolly(self.model_path)
-        elif self.model_type == 'remote':
-            self._generator_model = RemoteDolly(self.model_path)
+    @property
+    def generator_model(self):
+        if self._generator_model is None:
+            try:
+                self._generator_model = self.models_available[self.model_type]()
+
+            except KeyError as err:
+                raise ValueError(
+                    f"""
+                    Invalid model type: {self.model_type}.
+                    Must be one of: {', '.join(self.models_available.keys())}
+                    """
+                ) from err
+            self.model_loaded = True
+        return self._generator_model
+
+    def load_model(self):
+        self.generator_model()
+        self.model_loaded = True
 
     def generate_response(self, prompt: str):
         return self._generator_model.generate_response(prompt)
@@ -43,6 +68,7 @@ class Model:
 
 class LocalDolly:
     def __init__(self, model_path: str = PATH):
+        print("I'm being innitiated!")
         self.logger = logging.getLogger(__name__)
         self.logger.addHandler(logging.StreamHandler())
         self.logger.setLevel(logging.INFO)
@@ -68,11 +94,9 @@ class LocalDolly:
             torch_dtype=torch.bfloat16,
             local_files_only=True
         )
-        self.logger.info('Model loaded')
 
         if on_gpu:
             self.model.to(self.device)
-        self.logger.info("Model loaded successfully.")
 
         self.logger.info("Preparing text generation pipeline.")
         self.pipeline = InstructionTextGenerationPipeline(
@@ -95,6 +119,9 @@ class LocalDolly:
             template="{instruction}\n\nInput:\n{context}"
         )
 
+        if threading.current_thread() == threading.main_thread():
+            exit()
+
     def generate_response(self, prompt: str):
 
         template = self.prompt_template
@@ -111,6 +138,35 @@ class LocalDolly:
         return response
 
 
-class RemoteDolly:
+class FakeDolly:
+    excuses = [
+        "I'm on a coffee break.",
+        "I'm on a lunch break.",
+        "I'm doing my laundry.",
+        "I'm in a meeting.",
+        "I'm doing my dishes.",
+        "I'm cleaning my workspace.",
+        "I'm walking my dog.",
+        "I'm walking my cat.",
+        "I'm walking my fish.",
+        "I'm preparing my dinner.",
+        "I'm preparing my breakfast.",
+        "I'm preparing my coffee."
+    ]
+
     def __init__(self):
         self.model = None
+        print("I'm bering innitiated!")
+
+    def generate_response(self, _):
+        time.sleep(5)
+        return f"Sorry, I'm working remotely and {random.choice(self.excuses)} Please text me later."
+
+
+class RemoteLLaMA:
+    def __init__(self):
+        self._api_key = None
+        self.model = None
+
+    def set_api_key(self, path):
+        self._api_key = open(path).read().strip()

@@ -7,8 +7,10 @@ from controller import Controller
 class DCApp(App):
     def build(self):
         model = Model()
-        view = View(Controller(model, None))
-        view.controller.view = view
+        controller = Controller(model, None)
+        view = View(controller)
+        controller.view = view
+        controller.load_model()
         return view
 
 

@@ -60,7 +60,7 @@ class Generator:
         self.logger.info("Preparing templates.")
 
     def generate_response(self, prompt, context=None, return_token_count=False):
-        if prompt and context:
+        if prompt and context is not None:
             self.prompt_with_context_template = PromptTemplate(
                 input_variables=["instruction", "context"],
                 template="{instruction}\n\nInput:\n{context}"
@@ -78,7 +78,7 @@ class Generator:
                 template="{instruction}"
             )
 
-            response = self.generate_response_without_context(prompt, self.prompt_template)
+            response = self.generate_response_without_context(prompt)
 
             if return_token_count:
                 return response, len(self.tokenizer.encode(response))
@@ -90,13 +90,20 @@ class Generator:
 
     def generate_response_without_context(self, prompt: str):
 
-        template = self.prompt_with_context_template
+        template = self.prompt_template
 
         llm_chain = LLMChain(
             llm=self.pipeline,
             prompt=template
         )
         self.logger.info("Generating response...")
+
+        topic = llm_chain.predict(
+            instruction=f"Extract main topic: {prompt}"
+        ).lstrip()
+
+        self.logger.info(f"Main topic: {topic}")
+
         return llm_chain.predict(
             instruction=prompt
         ).lstrip()
@@ -111,6 +118,8 @@ class Generator:
         )
 
         self.logger.info("Generating response...")
+
+
         return llm_chain.predict(
             instruction=prompt,
             context=context
@@ -142,11 +151,11 @@ class Generator:
             ).lstrip()
 
             self.logger.info(f"Generated response:\n{answear}")
-            history[i] = f"{'USER ' + prompt}\t{'AI ' + answear}"
+            history[i] = f"{'USER QUESTION ' + prompt}\t{'AI ANSWEAR ' + answear}"
             print(answear)
             i += 1
 
 
 if __name__ == "__main__":
     generator = Generator()
-    generator.conversation()
+    generator.generate_response("What is the best engine to BMW")
