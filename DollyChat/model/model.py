@@ -17,7 +17,7 @@ PATH = r"E:\Models\dolly-v2-3b"
 class Model:
     _generator_model = None
 
-    def __init__(self, model_type: str = 'local', model_path: str = PATH):
+    def __init__(self, model_type: str = 'fake', model_path: str = PATH):
         logging.basicConfig(
             filename='model.log',
             filemode='a+',
@@ -140,18 +140,19 @@ class LocalDolly:
 
 class FakeDolly:
     excuses = [
-        "I'm on a coffee break.",
-        "I'm on a lunch break.",
-        "I'm doing my laundry.",
-        "I'm in a meeting.",
-        "I'm doing my dishes.",
-        "I'm cleaning my workspace.",
-        "I'm walking my dog.",
-        "I'm walking my cat.",
-        "I'm walking my fish.",
-        "I'm preparing my dinner.",
-        "I'm preparing my breakfast.",
-        "I'm preparing my coffee."
+        # "I'm on a coffee break.",
+        # "I'm on a lunch break.",
+        # "I'm doing my laundry.",
+        # "I'm in a meeting.",
+        # "I'm doing my dishes.",
+        # "I'm cleaning my workspace.",
+        # "I'm walking my dog.",
+        # "I'm walking my cat.",
+        # "I'm walking my fish.",
+        # "I'm preparing my dinner.",
+        # "I'm preparing my breakfast.",
+        # "I'm preparing my coffee.",
+        "SELECT excuse FROM SemiBuissnessRelatedExcusses ORDER BY RANDOM() LIMIT 1;"
     ]
 
     def __init__(self):
