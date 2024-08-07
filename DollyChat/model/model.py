@@ -1,20 +1,22 @@
-import torch
+""" Model class for the MVC architecture. """
 import logging
 import random
 import time
 import threading
+import torch
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from .instruct_pipeline import InstructionTextGenerationPipeline
 from langchain import PromptTemplate
 from langchain.llms import HuggingFacePipeline
 from langchain.chains import LLMChain
+from .instruct_pipeline import InstructionTextGenerationPipeline
 
 
 PATH = r"E:\Models\dolly-v2-3b"
 
 
 class Model:
+    """ Model class for the MVC architecture. """
     _generator_model = None
 
     def __init__(self, model_type: str = 'fake', model_path: str = PATH):
@@ -38,6 +40,7 @@ class Model:
 
     @property
     def generator_model(self):
+        """ Property to get the generator model. """
         if self._generator_model is None:
             try:
                 self._generator_model = self.models_available[self.model_type]()
@@ -53,20 +56,17 @@ class Model:
         return self._generator_model
 
     def load_model(self):
+        """ Loads the model. """
         self.generator_model()
         self.model_loaded = True
 
     def generate_response(self, prompt: str):
+        """ Generates a response using the model. """
         return self._generator_model.generate_response(prompt)
-
-    def set_data(self, data):
-        self.data = data
-
-    def get_data(self):
-        return self.data
 
 
 class LocalDolly:
+    """ Logic for initializing and using Dolly LLLM model. """
     def __init__(self, model_path: str = PATH):
         print("I'm being innitiated!")
         self.logger = logging.getLogger(__name__)
@@ -123,6 +123,7 @@ class LocalDolly:
             exit()
 
     def generate_response(self, prompt: str):
+        """ Generates a response using the model. """
 
         template = self.prompt_template
 
@@ -139,19 +140,20 @@ class LocalDolly:
 
 
 class FakeDolly:
+    """ Fake Dolly model for testing purposes. """
     excuses = [
-        # "I'm on a coffee break.",
-        # "I'm on a lunch break.",
-        # "I'm doing my laundry.",
-        # "I'm in a meeting.",
-        # "I'm doing my dishes.",
-        # "I'm cleaning my workspace.",
-        # "I'm walking my dog.",
-        # "I'm walking my cat.",
-        # "I'm walking my fish.",
-        # "I'm preparing my dinner.",
-        # "I'm preparing my breakfast.",
-        # "I'm preparing my coffee.",
+        "I'm on a coffee break.",
+        "I'm on a lunch break.",
+        "I'm doing my laundry.",
+        "I'm in a meeting.",
+        "I'm doing my dishes.",
+        "I'm cleaning my workspace.",
+        "I'm walking my dog.",
+        "I'm walking my cat.",
+        "I'm walking my fish.",
+        "I'm preparing my dinner.",
+        "I'm preparing my breakfast.",
+        "I'm preparing my coffee.",
         "SELECT excuse FROM SemiBuissnessRelatedExcusses ORDER BY RANDOM() LIMIT 1;"
     ]
 
@@ -160,14 +162,21 @@ class FakeDolly:
         print("I'm bering innitiated!")
 
     def generate_response(self, _):
+        """ Generates a fake response. """
         time.sleep(5)
-        return f"Sorry, I'm working remotely and {random.choice(self.excuses)} Please text me later."
+        return f"""
+            Sorry, I'm working remotely and {random.choice(self.excuses)}
+            Please text me later.
+        """
 
 
 class RemoteLLaMA:
+    """ WIP. Remote connection with LLaMA via NVIDIA API. """
     def __init__(self):
         self._api_key = None
         self.model = None
 
     def set_api_key(self, path):
-        self._api_key = open(path).read().strip()
+        """ Reads and sets the API key for the NVIDIA API. """
+        with open(path, 'r', encoding='utf-8') as file:
+            self._api_key = file.read().strip()
