@@ -1,3 +1,18 @@
 [project]
-requires = ["setuptools"]
+name = "DollyChat"
+version = "0.0.0"
+description = "A chat application using Kivy."
+authors = [
+    { name = "R2", email = "artur.oleksinski99@gmail.com" }
+]
+license = { text = "BSD 3-Clause License" }
+readme = "README.md"
+keywords = ["chat", "kivy", "application"]
+dynamic = ["dependencies"]
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements\base.txt"]}

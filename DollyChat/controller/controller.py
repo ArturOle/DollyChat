@@ -7,7 +7,7 @@ class Controller:
     def __init__(self, model, view):
         self.logger = logging.getLogger(__name__)
         self.logger.addHandler(logging.StreamHandler())
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.WARNING)
         self.view = view
         self.model = model
         self.generating = False
@@ -24,6 +24,7 @@ class Controller:
         self.lmm_loading_thread = threading.Thread(
             target=self._load_model_in_background
         )
+        self.logger.info("Loading thread started")
         self.lmm_loading_thread.start()
 
     def _load_model_in_background(self):
@@ -62,5 +63,8 @@ class Controller:
             self.view.data_label.text = "Generating response. Please wait..."
 
     def __del__(self):
-        self.lmm_loading_thread.join()
-        self.llm_generating_thread.join()
+        if self.lmm_loading_thread is not None and self.lmm_loading_thread != threading.current_thread():
+            self.lmm_loading_thread.join()
+
+        if self.llm_generating_thread is not None and self.lmm_loading_thread != threading.current_thread():
+            self.llm_generating_thread.join()
