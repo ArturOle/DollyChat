@@ -1,9 +1,13 @@
-import asyncio
+"""
+Controller module for the MVC architecture. Responsible for handling the
+communication between the model and the view.
+"""
 import logging
 import threading
 
 
 class Controller:
+    """ Controller class for the MVC architecture. """
     def __init__(self, model, view):
         self.logger = logging.getLogger(__name__)
         self.logger.addHandler(logging.StreamHandler())
@@ -16,6 +20,7 @@ class Controller:
         self.llm_generating_thread = None
 
     def load_model(self):
+        """ Load the model in a separate thread. """
         if self.model.model_loaded is False:
             self._load_model()
 
@@ -44,11 +49,18 @@ class Controller:
         self.generating = False
 
     def update_data(self, data):
+        """ Updates the view components with data obtained from model. """
         self.model.set_data(data)
         self.view.data_text = self.model.get_data()
         self.view.text_input.text = ""
 
     def generate_response(self, data):
+        """
+        Handles logic of generating response in separate thread to prevent
+        GUI from freezing. Also handles the case where the model has not been
+        loaded yet and the user tries to generate a response before generation
+        of previous task is finished.
+        """
         if self.model.model_loaded is False:
             self.view.data_label.text = "Model not loaded yet. Please wait..."
         elif self.generating is False:
@@ -63,8 +75,12 @@ class Controller:
             self.view.data_label.text = "Generating response. Please wait..."
 
     def __del__(self):
-        if self.lmm_loading_thread is not None and self.lmm_loading_thread != threading.current_thread():
+        if self.lmm_loading_thread is not None and\
+           self.lmm_loading_thread != threading.current_thread():
+
             self.lmm_loading_thread.join()
 
-        if self.llm_generating_thread is not None and self.lmm_loading_thread != threading.current_thread():
+        if self.llm_generating_thread is not None and\
+           self.lmm_loading_thread != threading.current_thread():
+
             self.llm_generating_thread.join()
