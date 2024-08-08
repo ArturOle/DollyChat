@@ -6,7 +6,7 @@ import threading
 import torch
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from langchain import PromptTemplate
+from langchain.prompts import PromptTemplate
 from langchain.llms import HuggingFacePipeline
 from langchain.chains import LLMChain
 from .instruct_pipeline import InstructionTextGenerationPipeline
@@ -42,16 +42,12 @@ class Model:
     def generator_model(self):
         """ Property to get the generator model. """
         if self._generator_model is None:
-            try:
-                self._generator_model = self.models_available[self.model_type]()
 
-            except KeyError as err:
-                raise ValueError(
-                    f"""
-                    Invalid model type: {self.model_type}.
-                    Must be one of: {', '.join(self.models_available.keys())}
-                    """
-                ) from err
+            self._generator_model = self.models_available.get(self.model_type, None)
+            if self._generator_model is None:
+                raise KeyError(f"Model type {self.model_type} not available.")
+
+            self._generator_model()
             self.model_loaded = True
         return self._generator_model
 
