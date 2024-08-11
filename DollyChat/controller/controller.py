@@ -11,7 +11,7 @@ class Controller:
     def __init__(self, model, view):
         self.logger = logging.getLogger(__name__)
         self.logger.addHandler(logging.StreamHandler())
-        self.logger.setLevel(logging.WARNING)
+        self.logger.setLevel(logging.INFO)
         self.view = view
         self.model = model
         self.generating = False
@@ -31,6 +31,7 @@ class Controller:
         )
         self.logger.info("Loading thread started")
         self.lmm_loading_thread.start()
+        self.model.model_loaded = True
 
     def _load_model_in_background(self):
         try:

@@ -3,3 +3,4 @@ transformers
 torch
 langchain
 kivy
+langchain_nvidia_ai_endpoints
