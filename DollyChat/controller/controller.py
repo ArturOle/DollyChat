@@ -31,7 +31,6 @@ class Controller:
         )
         self.logger.info("Loading thread started")
         self.lmm_loading_thread.start()
-        self.model.model_loaded = True
 
     def _load_model_in_background(self):
         try:
@@ -40,6 +39,7 @@ class Controller:
         except TypeError:
             pass
 
+        self.model.model_loaded = True
         self.logger.info("Model loaded")
         self.view.data_label.text = "Model loaded. Proceed."
 
