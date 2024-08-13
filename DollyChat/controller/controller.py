@@ -11,7 +11,7 @@ class Controller:
     def __init__(self, model, view):
         self.logger = logging.getLogger(__name__)
         self.logger.addHandler(logging.StreamHandler())
-        self.logger.setLevel(logging.WARNING)
+        self.logger.setLevel(logging.INFO)
         self.view = view
         self.model = model
         self.generating = False
@@ -39,6 +39,7 @@ class Controller:
         except TypeError:
             pass
 
+        self.model.model_loaded = True
         self.logger.info("Model loaded")
         self.view.data_label.text = "Model loaded. Proceed."
 

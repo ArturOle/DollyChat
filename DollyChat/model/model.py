@@ -10,6 +10,7 @@ from langchain.prompts import PromptTemplate
 from langchain.llms import HuggingFacePipeline
 from langchain.chains import LLMChain
 from .instruct_pipeline import InstructionTextGenerationPipeline
+from langchain_nvidia_ai_endpoints import ChatNVIDIA
 
 
 PATH = r"E:\Models\dolly-v2-3b"
@@ -19,7 +20,7 @@ class Model:
     """ Model class for the MVC architecture. """
     _generator_model = None
 
-    def __init__(self, model_type: str = 'fake', model_path: str = PATH):
+    def __init__(self, model_type: str = 'remotellama', model_path: str = PATH):
         logging.basicConfig(
             filename='model.log',
             filemode='a+',
@@ -38,27 +39,21 @@ class Model:
         self.model_path = model_path
         self.model_loaded = False
 
-    @property
-    def generator_model(self):
-        """ Property to get the generator model. """
+    def load_model(self):
+        """ Loads the model. """
         if self._generator_model is None:
 
             self._generator_model = self.models_available.get(self.model_type, None)
             if self._generator_model is None:
                 raise KeyError(f"Model type {self.model_type} not available.")
 
-            self._generator_model()
-            self.model_loaded = True
-        return self._generator_model
-
-    def load_model(self):
-        """ Loads the model. """
-        self.generator_model()
-        self.model_loaded = True
+        self._generator_model = self._generator_model()
 
     def generate_response(self, prompt: str):
         """ Generates a response using the model. """
-        return self._generator_model.generate_response(prompt)
+        return self._generator_model.generate_response(
+            prompt=prompt
+        )
 
 
 class LocalDolly:
@@ -115,8 +110,8 @@ class LocalDolly:
             template="{instruction}\n\nInput:\n{context}"
         )
 
-        if threading.current_thread() == threading.main_thread():
-            exit()
+        # if threading.current_thread() == threading.main_thread():
+        #     exit()
 
     def generate_response(self, prompt: str):
         """ Generates a response using the model. """
@@ -157,7 +152,7 @@ class FakeDolly:
         self.model = None
         print("I'm bering innitiated!")
 
-    def generate_response(self, _):
+    def generate_response(self, prompt: str):
         """ Generates a fake response. """
         time.sleep(5)
         return f"""
@@ -168,11 +163,58 @@ class FakeDolly:
 
 class RemoteLLaMA:
     """ WIP. Remote connection with LLaMA via NVIDIA API. """
-    def __init__(self):
-        self._api_key = None
-        self.model = None
+    _api_key = None
+    template = """
+        <s>[INST] <<SYS>>
+        You are expert in multiple fields. Keep the responses few sentences long.
+        <</SYS>>
 
-    def set_api_key(self, path):
-        """ Reads and sets the API key for the NVIDIA API. """
-        with open(path, 'r', encoding='utf-8') as file:
-            self._api_key = file.read().strip()
+        {instruction} [/INST]
+    """
+
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+        self.logger.addHandler(logging.StreamHandler())
+        self.logger.setLevel(logging.INFO)
+
+        self.logger.info("Connecting to NVIDIA API...")
+
+        self.client = ChatNVIDIA(
+            model="meta/llama-3.1-70b-instruct",
+            api_key=self.api_key,
+            temperature=0.2,
+            top_p=0.7,
+            max_tokens=1024,
+        )
+
+        self.logger.info("Connected to NVIDIA API.")
+
+    @property
+    def api_key(self):
+        """ API key retrival property. """
+        if self._api_key is None:
+            with open('api_key.txt', 'r', encoding='utf-8') as file:
+                self._api_key = file.read().strip()
+        return self._api_key
+
+    def generate_response(self, prompt: str):
+        """ Generates a response using the model. """
+        prompt_template = PromptTemplate(
+            input_variables=["instruction"],
+            template=self.template,
+        )
+        prompt = [{
+            "role": "user",
+            "content": prompt_template.format(instruction=prompt)
+        }]
+        response = ""
+
+        for chunk in self.client.stream(prompt):
+            response += chunk.content
+
+        return response
+
+
+if __name__ == '__main__':
+    model = RemoteLLaMA()
+    print(model.generate_response("Tell me a story about those medival times!"))
