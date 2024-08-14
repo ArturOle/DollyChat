@@ -25,7 +25,7 @@ class Controller:
             self._load_model()
 
     def _load_model(self):
-        self.view.data_label.text = "Loading model..."
+        self.view.chat_screen.data_label.text = "Loading model..."
         self.lmm_loading_thread = threading.Thread(
             target=self._load_model_in_background
         )
@@ -41,19 +41,27 @@ class Controller:
 
         self.model.model_loaded = True
         self.logger.info("Model loaded")
-        self.view.data_label.text = "Model loaded. Proceed."
+        self.view.chat_screen.data_label.text = "Model loaded. Proceed."
+
+    def change_model(self, model_name):
+        if model_name == self.model.model_type:
+            logging.info(f"Model {model_name} already loaded.")
+            return
+        self.model.unload_model()
+        self.model.model_type = model_name
+        self.load_model()
 
     def _generate_in_background(self, data):
         self.generating = True
         self.response = self.model.generate_response(data)
-        self.view.data_label.text = self.response
+        self.view.chat_screen.data_label.text = self.response
         self.generating = False
 
     def update_data(self, data):
         """ Updates the view components with data obtained from model. """
         self.model.set_data(data)
-        self.view.data_text = self.model.get_data()
-        self.view.text_input.text = ""
+        self.view.chat_screen.data_text = self.model.get_data()
+        self.view.chat_screen.text_input.text = ""
 
     def generate_response(self, data):
         """
@@ -63,17 +71,25 @@ class Controller:
         of previous task is finished.
         """
         if self.model.model_loaded is False:
-            self.view.data_label.text = "Model not loaded yet. Please wait..."
+            self.view.chat_screen.data_label.text = "Model not loaded yet. Please wait..."
         elif self.generating is False:
-            self.view.data_label.text = "Generating response..."
+            self.view.chat_screen.data_label.text = "Generating response..."
             self.llm_generating_thread = threading.Thread(
                 target=self._generate_in_background,
                 args=(data,)
             )
             self.llm_generating_thread.start()
-            self.view.text_input.text = ""
+            self.view.chat_screen.text_input.text = ""
         else:
-            self.view.data_label.text = "Generating response. Please wait..."
+            self.view.chat_screen.data_label.text = "Generating response. Please wait..."
+
+    def get_available_models(self):
+        """ Returns the available models. """
+        return self.model.models_available.keys()
+
+    def pop_up_ask_api_key(self):
+        """ Pop up to ask for API key. """
+        self.view.ask_api_key()
 
     def __del__(self):
         if self.lmm_loading_thread is not None and\
