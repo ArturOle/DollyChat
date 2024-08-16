@@ -90,7 +90,7 @@ class Controller:
 
     def get_available_models(self):
         """ Returns the available models. """
-        return self.model.models_available.keys()
+        return self.model.available_models.keys()
 
     def pop_up_ask_api_key(self):
         """ Pop up to ask for API key. """
