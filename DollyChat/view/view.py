@@ -188,6 +188,18 @@ class ModelCheckBoxGroup(BoxLayout):
             self.checkboxes[model].checkbox.bind(on_press=self._on_select)
             self.add_widget(self.checkboxes[model].h_box)
 
+    def find_selected(self):
+        for model, checkbox in self.checkboxes.items():
+            if checkbox.checkbox.active:
+                return model
+
+    def set_selection(self, model):
+        for checkbox in self.checkboxes.values():
+            if checkbox.model_name == model:
+                checkbox.checkbox.active = True
+            else:
+                checkbox.checkbox.active = False
+
     def _on_select(self, instance):
         for checkbox in self.checkboxes.values():
             if checkbox.checkbox != instance:
@@ -272,16 +284,16 @@ class SelectionScreen(Screen):
 
     def _go_to_chat(self, instance):
         self.manager.current = 'chat'
+        self.model_checkboxes.set_selection(self.controller.model.model_type)
 
     def _go_to_help(self, instance):
         self.manager.current = 'help'
+        self.model_checkboxes.set_selection(self.controller.model.model_type)
 
     def _submit(self, instance):
-        for model, checkbox in self.model_checkboxes.checkboxes.items():
-            if checkbox.checkbox.active:
-                self.manager.current = 'chat'
-                self.controller.change_model(model)
-                break
+        selected_model = self.model_checkboxes.find_selected()
+        self.controller.select_model(selected_model)
+        self.manager.current = 'chat'
 
 
 class HelpScreen(Screen):
