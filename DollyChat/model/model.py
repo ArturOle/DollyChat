@@ -3,7 +3,6 @@ import gc
 import logging
 import random
 import time
-import threading
 import torch
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -21,7 +20,12 @@ class Model:
     """ Model class for the MVC architecture. """
     _generator_model = None
 
-    def __init__(self, model_type: str = 'Remote Llama', model_path: str = PATH, api_path: str = 'api_key.txt'):
+    def __init__(
+        self,
+        model_type: str = 'Remote Llama',
+        model_path: str = PATH,
+        api_path: str = 'api_key.txt'
+    ):
         logging.basicConfig(
             filename='model.log',
             filemode='a+',
@@ -29,7 +33,7 @@ class Model:
             datefmt='%d/%m/%Y %H:%M:%S',
             level=logging.INFO
         )
-        self.models_available = {
+        self.available_models = {
             'Local Dolly': LocalDolly,
             'Fake Dolly': FakeDolly,
             'Remote Llama': RemoteLLaMA
@@ -39,14 +43,14 @@ class Model:
         self.data = ''
         self.model_type = ' '.join([mt.capitalize() for mt in model_type.split()])
         self.model_path = model_path
-        self.model_loaded = False
+        self.model_loaded_flag = False
 
     def unload_model(self):
         """ Resets the model. """
         del self._generator_model
         gc.collect()
         self._generator_model = None
-        self.model_loaded = False
+        self.model_loaded_flag = False
 
     def load_model(self):
         """ Loads the model. """
@@ -61,7 +65,7 @@ class Model:
 
         if self._generator_model is None:
 
-            self._generator_model = self.models_available.get(self.model_type, None)
+            self._generator_model = self.available_models.get(self.model_type, None)
             if self._generator_model is None:
                 raise KeyError(f"Model type {self.model_type} not available.")
 
@@ -127,9 +131,6 @@ class LocalDolly:
             input_variables=["instruction", "context"],
             template="{instruction}\n\nInput:\n{context}"
         )
-
-        # if threading.current_thread() == threading.main_thread():
-        #     exit()
 
     def generate_response(self, prompt: str):
         """ Generates a response using the model. """

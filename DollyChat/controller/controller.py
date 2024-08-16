@@ -14,48 +14,53 @@ class Controller:
         self.logger.setLevel(logging.INFO)
         self.view = view
         self.model = model
-        self.generating = False
+        self.generating_flag = False
         self.response = None
         self.lmm_loading_thread = None
         self.llm_generating_thread = None
 
     def load_model(self):
-        """ Load the model in a separate thread. """
-        if self.model.model_loaded is False:
+        """ Load the model in a separate thread if not already loaded. """
+        if self.model.model_loaded_flag is False:
             self._load_model()
+
+    def unload_model(self):
+        """ Unload the model. """
+        self.model.unload_model()
 
     def _load_model(self):
         self.view.chat_screen.data_label.text = "Loading model..."
         self.lmm_loading_thread = threading.Thread(
-            target=self._load_model_in_background
+            target=self._load_model_in_separate_thread
         )
         self.logger.info("Loading thread started")
         self.lmm_loading_thread.start()
 
-    def _load_model_in_background(self):
+    def _load_model_in_separate_thread(self):
         try:
             self.model.load_model()
 
         except TypeError:
             pass
 
-        self.model.model_loaded = True
+        self.model.model_loaded_flag = True
         self.logger.info("Model loaded")
         self.view.chat_screen.data_label.text = "Model loaded. Proceed."
 
     def change_model(self, model_name):
+        """ Change the model to the specified model if not already loaded. """
         if model_name == self.model.model_type:
             logging.info(f"Model {model_name} already loaded.")
             return
-        self.model.unload_model()
+        self.unload_model()
         self.model.model_type = model_name
         self.load_model()
 
-    def _generate_in_background(self, data):
-        self.generating = True
+    def _generate_in_separate_thead(self, data):
+        self.generating_flag = True
         self.response = self.model.generate_response(data)
         self.view.chat_screen.data_label.text = self.response
-        self.generating = False
+        self.generating_flag = False
 
     def update_data(self, data):
         """ Updates the view components with data obtained from model. """
@@ -70,12 +75,12 @@ class Controller:
         loaded yet and the user tries to generate a response before generation
         of previous task is finished.
         """
-        if self.model.model_loaded is False:
+        if self.model.model_loaded_flag is False:
             self.view.chat_screen.data_label.text = "Model not loaded yet. Please wait..."
-        elif self.generating is False:
+        elif self.generating_flag is False:
             self.view.chat_screen.data_label.text = "Generating response..."
             self.llm_generating_thread = threading.Thread(
-                target=self._generate_in_background,
+                target=self._generate_in_separate_thead,
                 args=(data,)
             )
             self.llm_generating_thread.start()
