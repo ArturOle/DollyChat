@@ -4,6 +4,7 @@ from kivy.uix.button import Button
 from kivy.properties import StringProperty
 from kivy.uix.screenmanager import Screen
 from kivy.uix.checkbox import CheckBox
+from kivy.uix.widget import Widget
 
 import logging
 
@@ -38,7 +39,7 @@ class ModelCheckBoxGroup(BoxLayout):
     def __init__(self, available_models, controller):
         super(ModelCheckBoxGroup, self).__init__()
         self.orientation = 'vertical'
-        self.size_hint_y = 0.6
+        self.size_hint_y = 0.7
         self.size_hint_x = 0.6
         self.available_models = available_models
         self.controller = controller
@@ -96,13 +97,28 @@ class SelectionScreen(Screen):
             text="Submit",
             valign='middle',
             halign='center',
-            size_hint_y=0.1,
-            size_hint_x=0.4
+            # size_hint_y=0.2,
+            size_hint_x=0.3
         )
-        self.submit_button.bind(on_press=self._submit)
-        self.layout.add_widget(self.submit_button)
 
-        self.h_box = BoxLayout(
+        spacer_widget_left = Widget(size_hint_x=0.3)
+        spacer_widget_right = Widget(size_hint_x=0.3)
+
+        h_box = BoxLayout(
+            orientation='horizontal',
+            size_hint_y=0.1
+        )
+
+        self.submit_button.bind(on_press=self._submit)
+        h_box.add_widget(spacer_widget_left)
+        h_box.add_widget(self.submit_button)
+        h_box.add_widget(spacer_widget_right)
+        self.layout.add_widget(h_box)
+
+        spacer_after_submit = Widget(size_hint_y=0.01)
+        self.layout.add_widget(spacer_after_submit)
+
+        h_box = BoxLayout(
             orientation='horizontal',
             size_hint_y=0.1
         )
@@ -112,7 +128,7 @@ class SelectionScreen(Screen):
             halign='center'
         )
         self.model_select.bind(size=self._update_text_size)
-        self.h_box.add_widget(self.model_select)
+        h_box.add_widget(self.model_select)
         self.button = Button(
             text="Back to Chat",
             valign='middle',
@@ -123,7 +139,7 @@ class SelectionScreen(Screen):
             on_press=self._go_to_chat,
             size=self._update_text_size
         )
-        self.h_box.add_widget(self.button)
+        h_box.add_widget(self.button)
         self.help_button = Button(
             text="Help",
             valign='middle',
@@ -131,9 +147,9 @@ class SelectionScreen(Screen):
         )
 
         self.help_button.bind(on_press=self._go_to_help)
-        self.h_box.add_widget(self.help_button)
+        h_box.add_widget(self.help_button)
 
-        self.layout.add_widget(self.h_box)
+        self.layout.add_widget(h_box)
         self.add_widget(self.layout)
 
     def _update_text_size(self, instance, value):
